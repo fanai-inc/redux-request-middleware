@@ -1,0 +1,11 @@
+{
+  "presets": [
+    "@babel/preset-env",
+    ["minify", {
+      "keepFnName": true,
+      "removeConsole": true,
+      "removeDebugger": true
+    }]
+  ],
+  "plugins": ["syntax-async-functions", "@babel/plugin-syntax-async-generators"]
+}

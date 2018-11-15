@@ -1,0 +1,44 @@
+{
+  "name": "@fanai/redux-request-middleware",
+  "version": "0.0.1",
+  "description": "Middleware used with Redux to handle XMLHttpRequests",
+  "main": "dist/main.umd.js",
+  "module": "dist/main.esm.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "prettier": "prettier --write \"{src,test}/**/*.{js,ts}\" index.d.ts index.ts \"**/*.md\"",
+    "build": "rollup -c --environment BABEL_ENV:production"
+  },
+  "keywords": [
+    "redux",
+    "middleware",
+    "javascript"
+  ],
+  "author": "Shaun Wallace",
+  "license": "Apache-2.0",
+  "dependencies": {
+    "await-to-js": "^2.0.1",
+    "axios": "^0.18.0"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.1.5",
+    "@babel/plugin-syntax-async-generators": "^7.0.0",
+    "@babel/plugin-transform-typescript": "^7.1.0",
+    "@babel/preset-env": "^7.1.5",
+    "@babel/preset-typescript": "^7.1.0",
+    "@types/node": "^10.12.3",
+    "babel-plugin-syntax-async-functions": "^6.13.0",
+    "babel-preset-minify": "^0.5.0",
+    "prettier": "^1.15.2",
+    "rollup": "^0.67.1",
+    "rollup-plugin-babel": "^4.0.3",
+    "rollup-plugin-commonjs": "^9.2.0",
+    "rollup-plugin-node-resolve": "^3.4.0",
+    "rollup-plugin-typescript": "^1.0.0",
+    "tslib": "^1.9.3",
+    "typescript": "^3.1.6"
+  },
+  "peerDependencies": {
+    "redux": "^4.0.1"
+  }
+}

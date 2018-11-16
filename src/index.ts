@@ -69,7 +69,6 @@ const requestMiddleware = (store: Store) => (next: Dispatch) => (
           )
         );
 
-        console.log(err.response, response);
       } else {
         [err, response] = Array.isArray(options)
           ? await to(axios.all(options.map(o => axios({ ...o }))))

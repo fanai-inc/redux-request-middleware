@@ -30,8 +30,6 @@ class SimpleCache {
   public cacheRequest({ namespace, concurrent }: RequestCacheOptions): string {
     const uid: string = uuid();
     const requestType = this.getNamespace(namespace, uid);
-
-    console.log(requestType);
     // the requestType is used as a top level mechanism to define which api endpoint is being hit
     // @ts-ignore
     const existingCache = this._cache.get(requestType);
@@ -57,7 +55,6 @@ class SimpleCache {
       // in parallel or not.
       if (requestType !== SimpleCache.generic) {
         if (concurrent !== undefined && !concurrent) {
-          console.log("cancelling existing request", requestType);
           // concurrent request of the same type are not allowed so either cancel existing
           // or simply ignore this cache request and allow the first to take precedence
           // TODO allow for more advanced options, right now simply cancel existing request

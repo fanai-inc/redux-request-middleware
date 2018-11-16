@@ -19,8 +19,6 @@ export default {
     resolve(),
     commonjs(),
     typescript(),
-    babel({
-      exclude: 'node_modules/**' // only transpile our source code
-    })
+    babel()
   ]
 }

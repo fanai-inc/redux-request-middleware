@@ -4,6 +4,10 @@
   "description": "Middleware used with Redux to handle XMLHttpRequests",
   "main": "dist/main.umd.js",
   "module": "dist/main.esm.js",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/fanai-inc/redux-request-middleware.git"
+  },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "prettier": "prettier --write \"{src,test}/**/*.{js,ts}\" index.d.ts index.ts \"**/*.md\"",
@@ -28,7 +32,9 @@
     "@babel/preset-typescript": "^7.1.0",
     "@types/node": "^10.12.3",
     "babel-plugin-syntax-async-functions": "^6.13.0",
+    "babel-preset-es2015-rollup": "^3.0.0",
     "babel-preset-minify": "^0.5.0",
+    "babelrc-rollup": "^3.0.0",
     "prettier": "^1.15.2",
     "rollup": "^0.67.1",
     "rollup-plugin-babel": "^4.0.3",

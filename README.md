@@ -22,7 +22,8 @@ For more on Redux and middleware checkout the [redux docs](https://redux.js.org/
 ### Usage
 
 ```javascript
-// dispatch an action with a type of [REQUEST]: Symbol(@@request)
+
+// hook up the middleware
 import { createStore, combineReducers, applyMiddleware } from 'redux'
 import { RequestReduxMiddleware, symbols } from '@fanai/redux-request-middleware';
 const { PENDING, SETTLED, FULFILLED, REJECTED, REQUEST } = symbols;
@@ -30,41 +31,48 @@ const { PENDING, SETTLED, FULFILLED, REJECTED, REQUEST } = symbols;
 const store = createStore(
   MyApp,
   // applyMiddleware() tells createStore() how to handle middleware
-  applyMiddleware(logger, RequestReduxMiddleware)
+  applyMiddleware(RequestReduxMiddleware)
 );
 
-[REQUEST]: {
-  options: {}, // axios request options
-  pollUntil?: (response) => true, // conditional to exit polling
-  pollInterval?: 2000, // time between polls
-  timeout?: 10000 * 2, // bail from polling
-  concurrent?: false, // allow same endpoint to be hit concurrently
-  namespace?: (options, uid) => options.url, // unique request type
-  statusCodes?: new Map([
-    [[400], {
-      payload: (action, state, response) => {},
-      type: 'SOME_ACTION_TYPE',
-    }]
-  ]),
-  lifecycle: {
-    [SETTLED]: {
-      payload: (action, state, response) => {},
-      type: 'SETTLED'
-    },
-    [FULFILLED]: {
-      payload: (action, state, response) => {},
-      type: 'FULFILLED'
-    },
-    [REJECTED]: {
-      payload: (action, state, response) => {},
-      type: 'REJECTED'
-    },
-    [PENDING]: {
-      payload: (action, state) => {},
-      type: 'PENDING',
+// in your action creator...
+import { Dispatch } from 'redux';
+
+// then dispatch an action with a type of REQUEST: Symbol(@@request)
+dispatch({
+  type: REQUEST,
+  payload: {
+    options: {}, // axios request options
+    pollUntil?: (response) => true, // conditional to exit polling
+    pollInterval?: 2000, // time between polls
+    timeout?: 10000 * 2, // bail from polling
+    concurrent?: false, // allow same endpoint to be hit concurrently
+    namespace?: (options, uid) => options.url, // unique request type
+    statusCodes?: new Map([
+      [[400], {
+        payload: (action, state, response) => {},
+        type: 'SOME_ACTION_TYPE',
+      }]
+    ]),
+    lifecycle: {
+      [SETTLED]: {
+        payload: (action, state, response) => {},
+        type: 'SETTLED'
+      },
+      [FULFILLED]: {
+        payload: (action, state, response) => {},
+        type: 'FULFILLED'
+      },
+      [REJECTED]: {
+        payload: (action, state, response) => {},
+        type: 'REJECTED'
+      },
+      [PENDING]: {
+        payload: (action, state) => {},
+        type: 'PENDING',
+      }
     }
   }
-}
+})
 ```
 
 ### Options

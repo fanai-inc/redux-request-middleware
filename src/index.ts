@@ -33,10 +33,10 @@ let requestCache = new SimpleCache();
 const requestMiddleware = (store: Store) => (next: Dispatch) => (
   action: RequestAction
 ): Promise<any> | RequestAction => {
-  if (action[Symbols.REQUEST]) {
+  if (action.type === Symbols.REQUEST) {
     const {
-      [Symbols.REQUEST]: { lifecycle = {}, options, namespace }
-    } = action;
+       lifecycle = {}, options, namespace
+    } = action.payload;
 
     if (!options) {
       throw new Error(
@@ -47,7 +47,7 @@ const requestMiddleware = (store: Store) => (next: Dispatch) => (
 
     // store the current request
     requestCache.options = options;
-    const uid: string = requestCache.cacheRequest(action[Symbols.REQUEST]);
+    const uid: string = requestCache.cacheRequest(action.payload);
     // if pending lifecycle is configured then create a request id that is used to cache this specific request
     if (lifecycle[Symbols.PENDING]) {
       next(
@@ -58,12 +58,12 @@ const requestMiddleware = (store: Store) => (next: Dispatch) => (
     return new Promise(async (resolve, reject) => {
       let [err, response]: [any, any] = [null, null];
 
-      if (action[Symbols.REQUEST].pollUntil) {
-        const { pollUntil, pollInterval, timeout } = action[Symbols.REQUEST];
+      if (action.payload.pollUntil) {
+        const { pollUntil, pollInterval, timeout } = action.payload;
         [err, response] = await to(
           poll(
             pollUntil,
-            () => axios({ ...action[Symbols.REQUEST].options }),
+            () => axios({ ...action.payload.options }),
             pollInterval,
             timeout
           )
@@ -72,7 +72,7 @@ const requestMiddleware = (store: Store) => (next: Dispatch) => (
       } else {
         [err, response] = Array.isArray(options)
           ? await to(axios.all(options.map(o => axios({ ...o }))))
-          : await to(axios({ ...action[Symbols.REQUEST].options }));
+          : await to(axios({ ...action.payload.options }));
       }
 
       if (
@@ -109,7 +109,7 @@ const requestMiddleware = (store: Store) => (next: Dispatch) => (
         !err ? resolve(response) : reject(err);
       }
       // clear the cache for the response
-      requestCache.clearRequest(action[Symbols.REQUEST], uid);
+      requestCache.clearRequest(action.payload, uid);
     });
   } else {
     return next(action);
@@ -175,8 +175,8 @@ const onComplete = (
   response: AxiosResponse
 ): FluxStandardPayload => {
   const {
-    [Symbols.REQUEST]: { statusCodes = new Map() }
-  } = action;
+    statusCodes = new Map()
+  } = action.payload;
 
   const statCodes = statusCodes.keys();
   // check for messaging or status code handlers

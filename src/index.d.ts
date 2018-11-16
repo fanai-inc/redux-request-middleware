@@ -55,7 +55,8 @@ export interface RequestInterface {
 }
 
 export interface RequestAction extends Action {
-  [Symbols.REQUEST]: RequestInterface;
+  type: symbol,
+  payload: RequestInterface,
 }
 
 export interface PayloadInterceptor {

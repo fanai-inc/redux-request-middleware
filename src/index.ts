@@ -58,8 +58,8 @@ const requestMiddleware = (store: Store) => (next: Dispatch) => (
     return new Promise(async (resolve, reject) => {
       let [err, response]: [any, any] = [null, null];
 
-      if (action.payload.pollUntil) {
-        const { pollUntil, pollInterval, timeout } = action.payload;
+      if (action.payload.poll) {
+        const { pollUntil, pollInterval, timeout } = action.payload.poll;
         [err, response] = await to(
           poll(
             pollUntil,

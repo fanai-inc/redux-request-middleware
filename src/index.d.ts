@@ -13,15 +13,16 @@ export interface RequestCacheOptions {
   namespace?: any;
 }
 
+export interface PollingOptions {
+  pollInterval?: number;
+  pollUntil?: (response: AxiosResponse) => any;
+  timeout?: number;
+}
+
 export type RequestCache = Map<string, Map<string, RequestCacheStatus>>;
 
 export interface RequestInterface {
   concurrent?: boolean;
-  // fetch: object | string;
-  statusCodes?: Map<
-    number[],
-    FluxStandardPayload | FluxStandardPayloadInterceptor
-  >;
   lifecycle: {
     [Symbols.PENDING]?: {
       type: string;
@@ -44,19 +45,21 @@ export interface RequestInterface {
       payload: FluxStandardPayload | FluxStandardPayloadInterceptor;
     };
   };
-  pollUntil?: (response: AxiosResponse) => any;
-  pollInterval?: number;
-  timeout?: number;
   namespace?: (
     request: AxiosRequestConfig | AxiosRequestConfig[],
     uid: string
   ) => string | string;
   options: AxiosRequestConfig | AxiosRequestConfig[];
+  poll?: PollingOptions;
+  statusCodes?: Map<
+    number[],
+    FluxStandardPayload | FluxStandardPayloadInterceptor
+  >;
 }
 
 export interface RequestAction extends Action {
-  type: symbol,
   payload: RequestInterface,
+  type: symbol,
 }
 
 export interface PayloadInterceptor {
@@ -72,6 +75,6 @@ export interface FluxStandardPayloadInterceptor {
 }
 
 export interface FluxStandardPayload {
-  type: string;
   payload?: any;
+  type: string;
 }

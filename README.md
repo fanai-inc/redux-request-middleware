@@ -14,6 +14,8 @@ The config for axios can be either an object representing a single request, or a
 Each configured lifecycle, e.g. PENDING, SETTLED, FULFILLED, REJECTED, is expected to return a flux standard action so a `type` property is required. The `payload` is simply the data you want to be dispatched just like any other action in your application. If a function is provided for the `payload` then that function will receive the `action`, `state`, and `response` of the async call and
 can optionally use these to build the payload that is dispatched at each stage in the respective lifecycle for the request that was made.
 
+*Note:* If both `SETTLED` and either `FULFILLED` or `REJECTED` are both configured then only `SETTLED` is respected in that scenario as `SETTLED` functions similar to `Promise.finally()`.
+
 In addition, the middleware supports short-polling in-order to poll a given endpoint at a set interval with an optional timeout.
 
 More information on the options and their default values for the middleware's configuration can be found below.
@@ -41,19 +43,8 @@ import { Dispatch } from 'redux';
 dispatch({
   type: REQUEST,
   payload: {
-    options: {}, // axios request options
-    pollUntil?: (response) => true, // conditional to exit polling
-    pollInterval?: 2000, // time between polls
-    timeout?: 10000 * 2, // bail from polling
     concurrent?: false, // allow same endpoint to be hit concurrently
-    namespace?: (options, uid) => options.url, // unique request type
-    statusCodes?: new Map([
-      [[400], {
-        payload: (action, state, response) => {},
-        type: 'SOME_ACTION_TYPE',
-      }]
-    ]),
-    lifecycle: {
+    lifecycle?: {
       [SETTLED]: {
         payload: (action, state, response) => {},
         type: 'SETTLED'
@@ -70,7 +61,20 @@ dispatch({
         payload: (action, state) => {},
         type: 'PENDING',
       }
-    }
+    },
+    namespace?: (options, uid) => options.url, // unique request type
+    options: {}, // axios request options
+    poll?: {
+      pollInterval?: 2000, // time between polls
+      pollUntil?: (response) => true, // conditional to exit polling
+     timeout?: 10000 * 2, // bail from polling
+    },
+    statusCodes?: new Map([
+      [[400], {
+        payload: (action, state, response) => {},
+        type: 'SOME_ACTION_TYPE',
+      }]
+    ]),
   }
 })
 ```

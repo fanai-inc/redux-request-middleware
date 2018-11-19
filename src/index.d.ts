@@ -77,5 +77,5 @@ export interface FluxStandardPayloadInterceptor {
 
 export interface FluxStandardPayload {
   payload?: any;
-  type: string;
+  type: string | symbol;
 }

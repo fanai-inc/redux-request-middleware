@@ -116,7 +116,13 @@ const requestMiddleware = (store: Store) => (next: Dispatch) => (
           }
         } else {
           next(
-            onComplete(action, store, uid, { type: "REQUEST_CANCELLED" }, null)
+            formPayload(
+              lifecycle[Symbols.CANCELLED] || { type: Symbols.CANCELLED },
+              uid,
+              action,
+              store.getState(),
+              null
+            )
           );
         }
       } else {
@@ -145,7 +151,7 @@ const requestMiddleware = (store: Store) => (next: Dispatch) => (
  */
 const formPayload = (
   lifecycle: {
-    type: string;
+    type: string | symbol;
     payload?: PayloadInterceptor | any;
     [prop: string]: any;
   },

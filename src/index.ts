@@ -60,7 +60,10 @@ const requestMiddleware = (store: Store) => (next: Dispatch) => (
         const { pollUntil, pollInterval, timeout } = action.payload.poll;
         [err, response] = await to(
           poll(
-            pollUntil,
+            // check for a cancelled request in addition to calling the pollUntil function
+            res =>
+              requestCache.getRequestStatus(namespace, uid) ===
+                Symbols.CANCELLED || pollUntil(res),
             () => axios({ ...action.payload.options }),
             pollInterval,
             timeout

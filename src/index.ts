@@ -1,5 +1,5 @@
 import { Store, Dispatch } from "redux/index.d";
-import { AxiosResponse } from "axios/index.d";
+import { AxiosResponse, CancelTokenSource } from "axios/index.d";
 import {
   RequestAction,
   FluxStandardPayload,
@@ -34,7 +34,8 @@ const requestMiddleware = (store: Store) => (next: Dispatch) => (
   action: RequestAction
 ): Promise<any> | RequestAction => {
   if (action.type === Symbols.REQUEST) {
-    const { lifecycle = {}, options, namespace } = action.payload;
+    const { lifecycle = {}, options } = action.payload;
+    const source: CancelTokenSource = axios.CancelToken.source();
 
     if (!options) {
       throw new Error(
@@ -45,7 +46,11 @@ const requestMiddleware = (store: Store) => (next: Dispatch) => (
 
     // store the current request
     requestCache.options = options;
-    const uid: string = requestCache.cacheRequest(action.payload);
+
+    const uid: string = requestCache.cacheRequest(
+      action.payload,
+      source.cancel
+    );
     // if pending lifecycle is configured then create a request id that is used to cache this specific request
     if (lifecycle[Symbols.PENDING]) {
       next(
@@ -61,10 +66,9 @@ const requestMiddleware = (store: Store) => (next: Dispatch) => (
         [err, response] = await to(
           poll(
             // check for a cancelled request in addition to calling the pollUntil function
-            res =>
-              requestCache.getRequestStatus(namespace, uid) ===
-                Symbols.CANCELLED || pollUntil(res),
-            () => axios({ ...action.payload.options }),
+            pollUntil,
+            () =>
+              axios({ ...action.payload.options, cancelToken: source.token }),
             pollInterval,
             timeout
           )
@@ -72,7 +76,9 @@ const requestMiddleware = (store: Store) => (next: Dispatch) => (
       } else {
         [err, response] = Array.isArray(options)
           ? await to(axios.all(options.map(o => axios({ ...o }))))
-          : await to(axios({ ...action.payload.options }));
+          : await to(
+              axios({ ...action.payload.options, cancelToken: source.token })
+            );
       }
 
       if (
@@ -82,11 +88,7 @@ const requestMiddleware = (store: Store) => (next: Dispatch) => (
       ) {
         // dispatch actions for success or error once the response(s) have been settled and the
         // response was not cancelled at some point during its lifespan
-        if (
-          requestCache.getRequestStatus(namespace, uid) !== Symbols.CANCELLED
-        ) {
-          // if the SETTLED lifecycle method is configured then disregard the
-          // REJECTED and FULFILLED to avoid duplicate dispatches
+        if (!axios.isCancel(err)) {
           const lifecycleInterceptor = err
             ? lifecycle[Symbols.REJECTED]
             : lifecycle[Symbols.FULFILLED];
@@ -103,15 +105,19 @@ const requestMiddleware = (store: Store) => (next: Dispatch) => (
 
           if (lifecycle[Symbols.SETTLED]) {
             next(
-              onComplete(
-                action,
-                store,
-                uid,
+              formPayload(
                 lifecycle[Symbols.SETTLED],
+                uid,
+                action,
+                store.getState(),
                 err ? err.response : response
               )
             );
           }
+        } else {
+          next(
+            onComplete(action, store, uid, { type: "REQUEST_CANCELLED" }, null)
+          );
         }
       } else {
         // when no lifecycle handlers have been specified then we simply resolve or reject
@@ -190,18 +196,21 @@ const onComplete = (
   const { statusCodes = new Map() } = action.payload;
 
   const statCodes = statusCodes.keys();
-  // check for messaging or status code handlers
-  for (const codes of statCodes) {
-    if (codes.includes(response.status)) {
-      // each code may either return a payload to be dispatched or a function
-      // that is executed and returns a payload
-      return formPayload(
-        statusCodes.get(codes) || {},
-        uid,
-        action,
-        store.getState(),
-        response
-      );
+
+  if (statCodes && response && response.status) {
+    // check for messaging or status code handlers
+    for (const codes of statCodes) {
+      if (codes.includes(response.status)) {
+        // each code may either return a payload to be dispatched or a function
+        // that is executed and returns a payload
+        return formPayload(
+          statusCodes.get(codes) || {},
+          uid,
+          action,
+          store.getState(),
+          response
+        );
+      }
     }
   }
 

@@ -7,7 +7,7 @@ class SimpleCache {
   private _options: any;
   private static readonly generic: unique symbol = Symbol("@@generic");
 
-  constructor(options?: any) {
+  constructor(options?: any, cancel?: any) {
     this._cache = new Map();
     this._options = options;
   }
@@ -27,7 +27,10 @@ class SimpleCache {
    * @param {string} uid     - unique identifier of the specific request
    * @returns                - void
    */
-  public cacheRequest({ namespace, concurrent }: RequestCacheOptions): string {
+  public cacheRequest(
+    { namespace, concurrent }: RequestCacheOptions,
+    cancel: () => any
+  ): string {
     const uid: string = uuid();
     const requestType = this.getNamespace(namespace, uid);
     // the requestType is used as a top level mechanism to define which api endpoint is being hit
@@ -36,6 +39,7 @@ class SimpleCache {
     const requestStatus: RequestCacheStatus = {
       requestedAt: Date.now(),
       status: Symbols.PENDING,
+      cancel,
       uid
     };
     // if there is not a request pending for this request type or this request type allows concurrent requests
@@ -57,8 +61,14 @@ class SimpleCache {
         if (concurrent !== undefined && !concurrent) {
           // concurrent request of the same type are not allowed so either cancel existing
           // or simply ignore this cache request and allow the first to take precedence
-          // TODO allow for more advanced options, right now simply cancel existing request
+          // TODO allow for more advanced options, right now simply cancel request that are still pending
           this.markCacheValueAsCancelled(existingCache);
+
+          existingCache.forEach(value =>
+            value.cancel(
+              "request made against same namespace, cancelling previous request"
+            )
+          );
         }
       }
       // cache most recent request
@@ -108,8 +118,9 @@ class SimpleCache {
     requestType: string | ((options: any, uid: string) => string),
     uid: string
   ): symbol {
+    const namespace = this.getNamespace(requestType, uid);
     // @ts-ignore
-    return this._cache.get(this.getNamespace(requestType, uid)).get(uid).status;
+    return this._cache.get(namespace).get(uid).status;
   }
 
   /**

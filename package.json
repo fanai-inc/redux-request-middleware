@@ -1,6 +1,6 @@
 {
   "name": "@fanai/redux-request-middleware",
-  "version": "0.4.0",
+  "version": "0.5.1",
   "description": "Middleware used with Redux to handle XMLHttpRequests",
   "main": "dist/main.umd.js",
   "module": "dist/main.esm.js",
@@ -16,7 +16,7 @@
     "prettier": "prettier --write \"{src,test}/**/*.{js,ts}\" index.d.ts index.ts \"**/*.md\"",
     "build": "rollup -c --environment BABEL_ENV:production",
     "prepublish": "yarn run build",
-    "release": "np"
+    "release": "np --yolo --contents=dist"
   },
   "keywords": [
     "redux",

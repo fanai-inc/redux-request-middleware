@@ -1,11 +1,12 @@
 import { Action } from "redux/index.d";
-import { AxiosRequestConfig, AxiosResponse } from "axios/index.d";
+import { AxiosRequestConfig, AxiosResponse, Canceler } from "axios/index.d";
 import * as Symbols from "./symbols";
 
 export interface RequestCacheStatus {
   requestedAt: number;
   status: symbol;
   uid: string;
+  cancel: Canceler;
 }
 
 export interface RequestCacheOptions {

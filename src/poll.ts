@@ -15,7 +15,7 @@ interface Request {
 function tick(generator: any) {
   return async function next() {
     return generator.next();
-  }
+  };
 }
 
 /**
@@ -94,4 +94,4 @@ async function poll(
   return response.value;
 }
 
-export { poll as poll }
+export { poll };

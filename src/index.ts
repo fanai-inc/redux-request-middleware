@@ -34,9 +34,7 @@ const requestMiddleware = (store: Store) => (next: Dispatch) => (
   action: RequestAction
 ): Promise<any> | RequestAction => {
   if (action.type === Symbols.REQUEST) {
-    const {
-       lifecycle = {}, options, namespace
-    } = action.payload;
+    const { lifecycle = {}, options, namespace } = action.payload;
 
     if (!options) {
       throw new Error(
@@ -68,7 +66,6 @@ const requestMiddleware = (store: Store) => (next: Dispatch) => (
             timeout
           )
         );
-
       } else {
         [err, response] = Array.isArray(options)
           ? await to(axios.all(options.map(o => axios({ ...o }))))
@@ -86,10 +83,8 @@ const requestMiddleware = (store: Store) => (next: Dispatch) => (
           requestCache.getRequestStatus(namespace, uid) !== Symbols.CANCELLED
         ) {
           // if the SETTLED lifecycle method is configured then disregard the
-          // REJECTED and FULFILLED do avoid duplicate dispatches
-          const lifecycleInterceptor = lifecycle[Symbols.SETTLED]
-            ? lifecycle[Symbols.SETTLED]
-            : err
+          // REJECTED and FULFILLED to avoid duplicate dispatches
+          const lifecycleInterceptor = err
             ? lifecycle[Symbols.REJECTED]
             : lifecycle[Symbols.FULFILLED];
           // call the next middleware
@@ -102,6 +97,18 @@ const requestMiddleware = (store: Store) => (next: Dispatch) => (
               err ? err.response : response
             )
           );
+
+          if (lifecycle[Symbols.SETTLED]) {
+            next(
+              onComplete(
+                action,
+                store,
+                uid,
+                lifecycle[Symbols.SETTLED],
+                err ? err.response : response
+              )
+            );
+          }
         }
       } else {
         // when no lifecycle handlers have been specified then we simply resolve or reject
@@ -138,12 +145,12 @@ const formPayload = (
   state: any,
   response?: AxiosResponse
 ): FluxStandardPayload => {
-
   const { payload: p, ...rest } = lifecycle;
 
-  const payload = (typeof lifecycle.payload === "function"
-  ? lifecycle.payload(response, action, state)
-  : lifecycle.payload);
+  const payload =
+    typeof lifecycle.payload === "function"
+      ? lifecycle.payload(response, action, state)
+      : lifecycle.payload;
 
   return {
     ...{
@@ -177,9 +184,7 @@ const onComplete = (
   },
   response: AxiosResponse
 ): FluxStandardPayload => {
-  const {
-    statusCodes = new Map()
-  } = action.payload;
+  const { statusCodes = new Map() } = action.payload;
 
   const statCodes = statusCodes.keys();
   // check for messaging or status code handlers

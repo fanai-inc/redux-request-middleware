@@ -1,6 +1,6 @@
 import { RequestCacheStatus, RequestCacheOptions } from "./index.d";
 import * as Symbols from "./symbols";
-import { uuid } from './uuid';
+import { uuid } from "./uuid";
 
 class SimpleCache {
   private _cache: Map<string, Map<string, RequestCacheStatus>>;
@@ -137,4 +137,4 @@ class SimpleCache {
   }
 }
 
-export { SimpleCache as SimpleCache };
+export { SimpleCache };

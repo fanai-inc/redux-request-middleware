@@ -131,22 +131,25 @@ const formPayload = (
   lifecycle: {
     type: string;
     payload?: PayloadInterceptor | any;
+    [prop: string]: any;
   },
   uid: string,
   action: RequestAction,
   state: any,
   response?: AxiosResponse
 ): FluxStandardPayload => {
+
+  const { payload: p, ...rest } = lifecycle;
+
+  const payload = (typeof lifecycle.payload === "function"
+  ? lifecycle.payload(response, action, state)
+  : lifecycle.payload);
+
   return {
     ...{
-      ...lifecycle,
-      payload: {
-        data:
-          typeof lifecycle.payload === "function"
-            ? lifecycle.payload(action, state, response)
-            : lifecycle.payload,
-        requestId: uid
-      }
+      ...rest,
+      ...(payload ? { payload } : {}),
+      requestId: uid
     }
   };
 };

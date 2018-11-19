@@ -53,7 +53,10 @@ export interface RequestInterface {
   poll?: PollingOptions;
   statusCodes?: Map<
     number[],
-    FluxStandardPayload | FluxStandardPayloadInterceptor
+    FluxStandardPayload | {
+      payload: FluxStandardPayloadInterceptor,
+      type: string
+    }
   >;
 }
 
@@ -63,15 +66,15 @@ export interface RequestAction extends Action {
 }
 
 export interface PayloadInterceptor {
-  (action: RequestAction, state: any, response?: AxiosResponse): any;
+  (response: AxiosResponse, action: RequestAction, state: any): any;
 }
 
 export interface FluxStandardPayloadInterceptor {
   (
+    response: AxiosResponse,
     action: RequestAction,
     state: any,
-    response?: AxiosResponse
-  ): FluxStandardPayload;
+  ): any;
 }
 
 export interface FluxStandardPayload {

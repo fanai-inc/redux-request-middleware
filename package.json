@@ -1,6 +1,6 @@
 {
   "name": "@fanai/redux-request-middleware",
-  "version": "0.6.0",
+  "version": "0.6.1",
   "description": "Middleware used with Redux to handle XMLHttpRequests",
   "main": "dist/main.umd.js",
   "module": "dist/main.esm.js",

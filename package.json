@@ -8,10 +8,14 @@
     "type": "git",
     "url": "https://github.com/fanai-inc/redux-request-middleware.git"
   },
+  "publishConfig": {
+    "access": "public"
+  },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "prettier": "prettier --write \"{src,test}/**/*.{js,ts}\" index.d.ts index.ts \"**/*.md\"",
-    "build": "rollup -c --environment BABEL_ENV:production"
+    "build": "rollup -c --environment BABEL_ENV:production",
+    "release": "np"
   },
   "keywords": [
     "redux",
@@ -35,6 +39,7 @@
     "babel-preset-es2015-rollup": "^3.0.0",
     "babel-preset-minify": "^0.5.0",
     "babelrc-rollup": "^3.0.0",
+    "np": "^3.0.4",
     "prettier": "^1.15.2",
     "rollup": "^0.67.1",
     "rollup-plugin-babel": "^4.0.3",

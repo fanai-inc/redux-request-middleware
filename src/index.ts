@@ -34,7 +34,12 @@ const requestMiddleware = (store: Store) => (next: Dispatch) => (
   action: RequestAction
 ): Promise<any> | RequestAction => {
   if (action.type === Symbols.REQUEST) {
-    const { lifecycle = {}, options } = action.payload;
+    const {
+      instance,
+      lifecycle = {},
+      options,
+      poll: pollOptions
+    } = action.payload;
     const source: CancelTokenSource = axios.CancelToken.source();
 
     if (!options) {
@@ -44,13 +49,20 @@ const requestMiddleware = (store: Store) => (next: Dispatch) => (
       );
     }
 
-    // store the current request
-    requestCache.options = options;
+    // allow for the config to be a function that receives the application state before returning
+    // the axios configuration for the request(s)
+    const reqConfig =
+      typeof options === "function" ? options(store.getState()) : options;
 
+    // store the current request configuration for use with forming the request namespace
+    requestCache.options = reqConfig;
+
+    // cache the current request
     const uid: string = requestCache.cacheRequest(
       action.payload,
       source.cancel
     );
+
     // if pending lifecycle is configured then create a request id that is used to cache this specific request
     if (lifecycle[Symbols.PENDING]) {
       next(
@@ -59,27 +71,22 @@ const requestMiddleware = (store: Store) => (next: Dispatch) => (
     }
 
     return new Promise(async (resolve, reject) => {
-      let [err, response]: [any, any] = [null, null];
+      // set the cancel token for each request and alternatively use the
+      // axios instance, which configures the request defaults that are merged
+      // with each configuration object when the async call is made
+      const request = () =>
+        Array.isArray(reqConfig)
+          ? axios.all(
+              reqConfig.map(o =>
+                (instance || axios)({ ...o, cancelToken: source.token })
+              )
+            )
+          : (instance || axios)({ ...reqConfig, cancelToken: source.token });
 
-      if (action.payload.poll) {
-        const { pollUntil, pollInterval, timeout } = action.payload.poll;
-        [err, response] = await to(
-          poll(
-            // check for a cancelled request in addition to calling the pollUntil function
-            pollUntil,
-            () =>
-              axios({ ...action.payload.options, cancelToken: source.token }),
-            pollInterval,
-            timeout
-          )
-        );
-      } else {
-        [err, response] = Array.isArray(options)
-          ? await to(axios.all(options.map(o => axios({ ...o }))))
-          : await to(
-              axios({ ...action.payload.options, cancelToken: source.token })
-            );
-      }
+      // make request(s)
+      const [err, response]: [any, any] = await to(
+        pollOptions ? poll(request, pollOptions) : request()
+      );
 
       if (
         lifecycle[Symbols.SETTLED] ||

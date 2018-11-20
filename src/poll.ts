@@ -41,7 +41,7 @@ async function delay(amount: number): Promise<any> {
 async function* fetch(
   endpoint: Request,
   yieldUntilCondition: YieldUntil
-): AsyncIterableIterator<any> {
+): AsyncIterableIterator<{ done: boolean; value: any }> {
   while (true) {
     // call the intended api
     const [err, response] = await to(endpoint());
@@ -68,14 +68,20 @@ async function* fetch(
  * @returns {any} - response from the api
  */
 async function poll(
-  condition: YieldUntil,
   endpoint: Request,
-  pollInterval: number = 5000,
-  timeout: number
+  {
+    pollUntil,
+    pollInterval = 5000,
+    timeout = 1000 * 60 * 2
+  }: {
+    pollUntil: YieldUntil;
+    pollInterval?: number;
+    timeout?: number;
+  }
 ) {
-  let gen: AsyncIterableIterator<any> = fetch(endpoint, condition);
+  let gen: AsyncIterableIterator<any> = fetch(endpoint, pollUntil);
   let timesUp: boolean = false;
-  let response: { done: boolean; value: any } = { done: false, value: null };
+  let response: { done: boolean; value: any } = await tick(gen)();
 
   if (typeof timeout === "number" && !Number.isNaN(timeout)) {
     setTimeout(() => (timesUp = true), timeout);

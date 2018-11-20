@@ -1,13 +1,20 @@
 # Redux - Request Middleware
 
-Simple Redux middleware that allows your dispatched actions to be piped through.
+Simple Redux middleware that internally uses [Axios](https://github.com/axios/axios) and allows your dispatched actions to easily hook into the various Promise lifecycles.
 
 ## Overview
 
-Any action that is dispatched using the middleware's provided Symbol which can be imported via `import { symbols } from '@fanai/redux-request-middleware'`
+Any action that is dispatched using the middleware's provided Symbol for a request will be picked up by the middleware. All other action types are ignored by the middleware and will not affect existing actions.
 
-The middleware then picks up those actions and makes an async request to
-the endpoint specified in the options config using axios.
+The required action type can be imported via:
+
+```javascript
+import { symbols } from "@fanai/redux-request-middleware";
+
+const { REQUEST } = symbols;
+```
+
+The middleware then picks up those actions and makes an async request to the endpoint specified in the options config using axios. The options configuration can optionally be a function that then returns an Axios configuration object or an array of configuration objects. This is useful if your options need some value in your application's state that either aids in forming the options or is sent along with the request itself.
 
 The config for axios can be either an object representing a single request, or alternatively it can be an array of config objects which internally calls `axios.all()` and resolves with an array of values similar to `Promise.all()`.
 
@@ -83,16 +90,17 @@ dispatch({
 
 ### Options
 
-|     Name     | Required |      Default      | Description                                                                                                                                     |
-| :----------: | :------: | :---------------: | :---------------------------------------------------------------------------------------------------------------------------------------------- |
-|   options    |    ✅    |        n/a        | [axios configuration](https://github.com/axios/axios#request-config)                                                                            |
-|  concurrent  |    ❌    |       true        | Allow requests against the same endpoint to happen concurrently                                                                                 |
-|  namespace   |    ❌    | Symbol(@@generic) | Caches concurrent requests against a namespace in-order to cancel when concurrent is set to false                                               |
-|  pollUntil   |    ❌    |     undefined     | Function used to enabled polling. If supplied it receives the response and should return true/false in-order to exit or continue polling        |
-| pollInterval |    ❌    |       5000        | Number of milliseconds to wait between polls                                                                                                    |
-|   timeout    |    ❌    |     undefined     | Number of milliseconds to wait before bailing out of an active poll                                                                             |
-| statusCodes  |    ❌    |     undefined     | Map of http status codes to perform a lookup against when a request succeeds or fails                                                           |
-|  lifecycle   |    ❌    |     undefined     | If not provided then the request will happen and simple return a Promise that resolves with the fetch's success or rejects with a failure error |
+|     Name     | Required |      Default      | Description                                                                                                                                                                           |
+| :----------: | :------: | :---------------: | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+|   instance   |    ❌    |     undefined     | [axios instance](https://github.com/axios/axios#axioscreateconfig) axios instance that can be pre-configured with common options that are then merged with subsequent request options |
+|   options    |    ✅    |     undefined     | [axios configuration](https://github.com/axios/axios#request-config) or a function that receives the current appState and returns an Axios config object                              |
+|  concurrent  |    ❌    |       true        | Allow requests against the same endpoint to happen concurrently                                                                                                                       |
+|  namespace   |    ❌    | Symbol(@@generic) | Caches concurrent requests against a namespace in-order to cancel when concurrent is set to false                                                                                     |
+|  pollUntil   |    ❌    |     undefined     | Function used to enabled polling. If supplied it receives the response and should return true/false in-order to exit or continue polling                                              |
+| pollInterval |    ❌    |       5000        | Number of milliseconds to wait between polls                                                                                                                                          |
+|   timeout    |    ❌    |     undefined     | Number of milliseconds to wait before bailing out of an active poll                                                                                                                   |
+| statusCodes  |    ❌    |     undefined     | Map of http status codes to perform a lookup against when a request succeeds or fails                                                                                                 |
+|  lifecycle   |    ❌    |     undefined     | If not provided then the request will happen and simple return a Promise that resolves with the fetch's success or rejects with a failure error                                       |
 
 ## License
 

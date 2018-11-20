@@ -1,5 +1,10 @@
 import { Action } from "redux/index.d";
-import { AxiosRequestConfig, AxiosResponse, Canceler } from "axios/index.d";
+import {
+  AxiosInstance,
+  AxiosRequestConfig,
+  AxiosResponse,
+  Canceler
+} from "axios/index.d";
 import * as Symbols from "./symbols";
 
 export interface RequestCacheStatus {
@@ -15,14 +20,15 @@ export interface RequestCacheOptions {
 }
 
 export interface PollingOptions {
+  pollUntil: (response: AxiosResponse) => any;
   pollInterval?: number;
-  pollUntil?: (response: AxiosResponse) => any;
   timeout?: number;
 }
 
 export type RequestCache = Map<string, Map<string, RequestCacheStatus>>;
 
 export interface RequestInterface {
+  instance?: AxiosInstance;
   concurrent?: boolean;
   lifecycle: {
     [Symbols.PENDING]?: {
@@ -50,7 +56,10 @@ export interface RequestInterface {
     request: AxiosRequestConfig | AxiosRequestConfig[],
     uid: string
   ) => string | string;
-  options: AxiosRequestConfig | AxiosRequestConfig[];
+  options:
+    | AxiosRequestConfig
+    | AxiosRequestConfig[]
+    | ((state: any) => AxiosRequestConfig | AxiosRequestConfig[]);
   poll?: PollingOptions;
   statusCodes?: Map<
     number[],

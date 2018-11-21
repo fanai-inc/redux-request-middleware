@@ -4,13 +4,12 @@ Simple Redux middleware that internally uses [Axios](https://github.com/axios/ax
 
 ## Overview
 
-Any action that is dispatched using the middleware's provided Symbol for a request will be picked up by the middleware. All other action types are ignored by the middleware and will not affect existing actions.
+Any action that is dispatched using the middleware's provided Symbol for a request will be picked up by the middleware. All other action types are ignored by the middleware and will not affect any existing actions that your application currently dispatches.
 
 The required action type can be imported via:
 
 ```javascript
 import { symbols } from "@fanai/redux-request-middleware";
-
 const { REQUEST } = symbols;
 ```
 
@@ -18,7 +17,7 @@ The middleware then picks up those actions and makes an async request to the end
 
 The config for axios can be either an object representing a single request, or alternatively it can be an array of config objects which internally calls `axios.all()` and resolves with an array of values similar to `Promise.all()`.
 
-Each configured lifecycle, e.g. PENDING, SETTLED, FULFILLED, REJECTED, is expected to return a flux standard action so a `type` property is required. The `payload` is simply the data you want to be dispatched just like any other action in your application. If a function is provided for the `payload` then that function will receive the `response` of the async request, the original dispatched `action`, and `state` which comes from Redux's `getState()` method. You can optionally use these to build the payload that is dispatched at each stage in the respective lifecycle for the request that was made, therefore allowing your payloads to be dynamically built.
+Each configured lifecycle, e.g. PENDING, SETTLED, FULFILLED, REJECTED, CANCELLED, is expected to return a flux standard action so a `type` property is required. The `payload` is simply the data you want to be dispatched just like any other action in your application. If a function is provided for the `payload` then that function will receive the `response` of the async request, the original dispatched `action`, and `state` which comes from Redux's `getState()` method. You can optionally use these to build the payload that is dispatched at each stage in the respective lifecycle for the request that was made, therefore allowing your payloads to be dynamically built.
 
 _Note:_ The `SETTLED` lifecycle functions similar to `Promise.finally() and will receive the error or the response depending on which is returned by axios`.
 
@@ -50,6 +49,8 @@ import { Dispatch } from 'redux';
 dispatch({
   payload: {
     concurrent?: false, // allow same endpoint to be hit concurrently
+    // pre-populated axios instance set with any global application request defaults
+    instance?: axios.create(AxiosRequestConfig),
     // async request lifecycle hooks
     lifecycle?: {
       [SETTLED]: {
@@ -68,9 +69,14 @@ dispatch({
         payload: (response: undefined, action: RequestAction, state: any): any => {},
         type: 'PENDING',
       }
+      [CANCELLED]: {
+        payload: (response: undefined, action: RequestAction, state: any): any => {},
+        type: 'CANCELLED',
+      }
     },
     namespace?: (options, uid) => options.url, // unique request type
-    options: {}, // axios request options
+    // axios request options or function that receives the appState and should return an AxiosRequestConfig
+    options: {},
     poll?: {
       pollInterval?: 2000, // time between polls
       pollUntil?: (response) => true, // conditional to exit polling
@@ -98,7 +104,7 @@ dispatch({
 |  namespace   |    ❌    | Symbol(@@generic) | Caches concurrent requests against a namespace in-order to cancel when concurrent is set to false                                                                                     |
 |  pollUntil   |    ❌    |     undefined     | Function used to enabled polling. If supplied it receives the response and should return true/false in-order to exit or continue polling                                              |
 | pollInterval |    ❌    |       5000        | Number of milliseconds to wait between polls                                                                                                                                          |
-|   timeout    |    ❌    |     undefined     | Number of milliseconds to wait before bailing out of an active poll                                                                                                                   |
+|   timeout    |    ❌    |     2min     | Number of milliseconds to wait before bailing out of an active poll                                                                                                                   |
 | statusCodes  |    ❌    |     undefined     | Map of http status codes to perform a lookup against when a request succeeds or fails                                                                                                 |
 |  lifecycle   |    ❌    |     undefined     | If not provided then the request will happen and simple return a Promise that resolves with the fetch's success or rejects with a failure error                                       |
 

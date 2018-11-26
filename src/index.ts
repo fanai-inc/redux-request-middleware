@@ -132,6 +132,8 @@ const requestMiddleware = (store: Store) => (next: Dispatch) => (
             )
           );
         }
+
+        resolve(err ? err.response : response);
       } else {
         // when no lifecycle handlers have been specified then we simply resolve or reject
         // and the code that dispatched the action can handle it without the using the middleware

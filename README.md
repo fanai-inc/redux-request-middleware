@@ -53,23 +53,23 @@ dispatch({
     instance?: axios.create(AxiosRequestConfig),
     // async request lifecycle hooks
     lifecycle?: {
-      [SETTLED]: {
+      [SETTLED]?: {
         payload: (response: AxiosResponse, action: RequestAction, state: any): any => {},
         type: 'SETTLED'
       },
-      [FULFILLED]: {
+      [FULFILLED]?: {
         payload: (response: AxiosResponse, action: RequestAction, state: any): any => {},
         type: 'FULFILLED'
       },
-      [REJECTED]: {
+      [REJECTED]?: {
         payload: (response: AxiosResponse, action: RequestAction, state: any): any => {},
         type: 'REJECTED'
       },
-      [PENDING]: {
+      [PENDING]?: {
         payload: (response: undefined, action: RequestAction, state: any): any => {},
         type: 'PENDING',
       }
-      [CANCELLED]: {
+      [CANCELLED]?: {
         payload: (response: undefined, action: RequestAction, state: any): any => {},
         type: 'CANCELLED',
       }
@@ -104,7 +104,7 @@ dispatch({
 |  namespace   |    ❌    | Symbol(@@generic) | Caches concurrent requests against a namespace in-order to cancel when concurrent is set to false                                                                                     |
 |  pollUntil   |    ❌    |     undefined     | Function used to enabled polling. If supplied it receives the response and should return true/false in-order to exit or continue polling                                              |
 | pollInterval |    ❌    |       5000        | Number of milliseconds to wait between polls                                                                                                                                          |
-|   timeout    |    ❌    |     2min     | Number of milliseconds to wait before bailing out of an active poll                                                                                                                   |
+|   timeout    |    ❌    |       2min        | Number of milliseconds to wait before bailing out of an active poll                                                                                                                   |
 | statusCodes  |    ❌    |     undefined     | Map of http status codes to perform a lookup against when a request succeeds or fails                                                                                                 |
 |  lifecycle   |    ❌    |     undefined     | If not provided then the request will happen and simple return a Promise that resolves with the fetch's success or rejects with a failure error                                       |
 

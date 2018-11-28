@@ -64,11 +64,13 @@ class SimpleCache {
           // TODO allow for more advanced options, right now simply cancel request that are still pending
           this.markCacheValueAsCancelled(existingCache);
 
-          existingCache.forEach(value =>
-            value.cancel(
-              "request made against same namespace, cancelling previous request"
-            )
-          );
+          if (cancel) {
+            existingCache.forEach(value =>
+              value.cancel(
+                "request made against same namespace, cancelling previous request"
+              )
+            );
+          }
         }
       }
       // cache most recent request

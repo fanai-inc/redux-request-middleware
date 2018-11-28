@@ -1,5 +1,9 @@
 import { Store, Dispatch } from "redux/index.d";
-import { AxiosResponse, CancelTokenSource } from "axios/index.d";
+import {
+  AxiosResponse,
+  CancelTokenSource,
+  AxiosRequestConfig
+} from "axios/index.d";
 import {
   RequestAction,
   FluxStandardPayload,
@@ -38,29 +42,34 @@ const requestMiddleware = (store: Store) => (next: Dispatch) => (
       instance,
       lifecycle = {},
       options,
-      poll: pollOptions
+      poll: pollOptions,
+      fetch
     } = action.payload;
-    const source: CancelTokenSource = axios.CancelToken.source();
 
-    if (!options) {
+    if (!options && !fetch) {
       throw new Error(
-        `Options is required but either none were provided or they do not match the correct signature.
+        `Options is required when the fetch param is not supplied, either none were provided or they do not match the correct signature.
          To find out what options are supported see: https://github.com/axios/axios`
       );
     }
 
-    // allow for the config to be a function that receives the application state before returning
-    // the axios configuration for the request(s)
-    const reqConfig =
-      typeof options === "function" ? options(store.getState()) : options;
+    let source: CancelTokenSource | null = null;
+    let reqConfig: AxiosRequestConfig | AxiosRequestConfig[] | null = null;
 
-    // store the current request configuration for use with forming the request namespace
-    requestCache.options = reqConfig;
+    if (options) {
+      source = axios.CancelToken.source();
+      // allow for the config to be a function that receives the application state before returning
+      // the axios configuration for the request(s)
+      reqConfig =
+        typeof options === "function" ? options(store.getState()) : options;
+      // store the current request configuration for use with forming the request namespace
+      requestCache.options = reqConfig;
+    }
 
     // cache the current request
     const uid: string = requestCache.cacheRequest(
       action.payload,
-      source.cancel
+      source && source.cancel
     );
 
     // if pending lifecycle is configured then create a request id that is used to cache this specific request
@@ -74,14 +83,20 @@ const requestMiddleware = (store: Store) => (next: Dispatch) => (
       // set the cancel token for each request and alternatively use the
       // axios instance, which configures the request defaults that are merged
       // with each configuration object when the async call is made
-      const request = () =>
-        Array.isArray(reqConfig)
-          ? axios.all(
-              reqConfig.map(o =>
-                (instance || axios)({ ...o, cancelToken: source.token })
+      let request;
+
+      if (fetch) {
+        request = () => fetch(action, store.getState());
+      } else {
+        request = () =>
+          Array.isArray(reqConfig)
+            ? axios.all(
+                reqConfig.map(o =>
+                  (instance || axios)({ ...o, cancelToken: source.token })
+                )
               )
-            )
-          : (instance || axios)({ ...reqConfig, cancelToken: source.token });
+            : (instance || axios)({ ...reqConfig, cancelToken: source.token });
+      }
 
       // make request(s)
       const [err, response]: [any, any] = await to(
@@ -95,19 +110,20 @@ const requestMiddleware = (store: Store) => (next: Dispatch) => (
       ) {
         // dispatch actions for success or error once the response(s) have been settled and the
         // response was not cancelled at some point during its lifespan
-        if (!axios.isCancel(err)) {
+        const settledValue = fetch
+          ? err || response
+          : err
+          ? err.response
+          : response;
+
+        if (!axios.isCancel(err) || fetch) {
           const lifecycleInterceptor = err
             ? lifecycle[Symbols.REJECTED]
             : lifecycle[Symbols.FULFILLED];
+
           // call the next middleware
           next(
-            onComplete(
-              action,
-              store,
-              uid,
-              lifecycleInterceptor,
-              err ? err.response : response
-            )
+            onComplete(action, store, uid, lifecycleInterceptor, settledValue)
           );
 
           if (lifecycle[Symbols.SETTLED]) {
@@ -117,7 +133,7 @@ const requestMiddleware = (store: Store) => (next: Dispatch) => (
                 uid,
                 action,
                 store.getState(),
-                err ? err.response : response
+                settledValue
               )
             );
           }
@@ -133,7 +149,7 @@ const requestMiddleware = (store: Store) => (next: Dispatch) => (
           );
         }
 
-        resolve(err ? err.response : response);
+        resolve(settledValue);
       } else {
         // when no lifecycle handlers have been specified then we simply resolve or reject
         // and the code that dispatched the action can handle it without the using the middleware

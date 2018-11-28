@@ -30,6 +30,7 @@ export type RequestCache = Map<string, Map<string, RequestCacheStatus>>;
 export interface RequestInterface {
   instance?: AxiosInstance;
   concurrent?: boolean;
+  fetch?: (action: RequestAction, state: any) => Promise<any>;
   lifecycle: {
     [Symbols.PENDING]?: {
       type: string;
@@ -63,11 +64,10 @@ export interface RequestInterface {
   poll?: PollingOptions;
   statusCodes?: Map<
     number[],
-    | FluxStandardPayload
-    | {
-        payload: FluxStandardPayloadInterceptor;
-        type: string;
-      }
+    {
+      payload?: FluxStandardPayloadInterceptor | any;
+      type: string;
+    }
   >;
 }
 

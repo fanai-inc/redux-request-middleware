@@ -11,6 +11,9 @@
   "publishConfig": {
     "access": "public"
   },
+  "bugs": {
+    "url: "https://github.com/fanai-inc/redux-request-middleware/issues"
+  },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "prettier": "prettier --write \"{src,test}/**/*.{js,ts}\" index.d.ts index.ts \"**/*.md\"",

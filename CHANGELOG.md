@@ -15,7 +15,7 @@ New Functionality:
   configuration and axios. You can now pass a `fetch` param which is simply a function that
   returns a Promise. This works well when you want to use the middleware with an external service
   that has its own mechanism for making requests but you still want to tap into lifecycle hooks
-  and status codes. When used the middleware will resolve or reject with the error or response
+  and status codes. When used, the middleware will resolve or reject with the error or response
   when the promise is settled.
 
 ### 0.7.2 (Nov 26, 2018)

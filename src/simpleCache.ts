@@ -32,7 +32,7 @@ class SimpleCache {
     cancel: () => any
   ): string {
     const uid: string = uuid();
-    const requestType = this.getNamespace(namespace, uid);
+    const requestType = this.getNamespace(namespace, uid) || SimpleCache.generic;
     // the requestType is used as a top level mechanism to define which api endpoint is being hit
     // @ts-ignore
     const existingCache = this._cache.get(requestType);
@@ -88,13 +88,15 @@ class SimpleCache {
    * @returns                - void
    */
   public clearRequest({ namespace }: RequestCacheOptions, uid: string): void {
-    const requestType = namespace || SimpleCache.generic;
+    const requestType = this.getNamespace(namespace, uid) || SimpleCache.generic;
+    // @ts-ignore
     const currentRequest = this._cache.get(requestType);
     // clear request cache once request is complete
     if (currentRequest) {
       currentRequest.delete(uid);
       // clear the request cache at the request type if there are no request left of the given type
       if (currentRequest.size === 0) {
+        // @ts-ignore
         this._cache.delete(requestType);
       }
     }

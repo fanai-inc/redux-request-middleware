@@ -1,5 +1,12 @@
 # Changelog
 
+### 0.8.1 (Dec 4, 2018)
+
+Fixes:
+
+- request cache not cleared when the request namespace was supplied as a function.
+- request namespace type not set to Symbol(@@generic) but as undefined
+
 ### 0.8.0 (Nov 28, 2018)
 
 New Functionality:

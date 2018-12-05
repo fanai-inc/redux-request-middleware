@@ -1,5 +1,11 @@
 # Changelog
 
+### 0.8.2 (Dec 5, 2018)
+
+Fixes:
+
+- when a fulfilled handler was provided but no reject handler and the promise fails then an uncaught error was being thrown as the payload was expected, the reverse was also true. Now if one is not provided and the outcome of the promise expects a handler and no settled handler is provided then the middleware simply resolves or rejects with the response. Nothing more is dispatched.
+
 ### 0.8.1 (Dec 4, 2018)
 
 Fixes:

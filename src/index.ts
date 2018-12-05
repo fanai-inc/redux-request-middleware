@@ -121,11 +121,16 @@ const requestMiddleware = (store: Store) => (next: Dispatch) => (
             ? lifecycle[Symbols.REJECTED]
             : lifecycle[Symbols.FULFILLED];
 
-          // call the next middleware
-          next(
-            onComplete(action, store, uid, lifecycleInterceptor, settledValue)
-          );
+          // if a fulfilled handler or error handler was provided
+          // then call the respective handler
+          if (lifecycleInterceptor) {
+            // call the next middleware
+            next(
+              onComplete(action, store, uid, lifecycleInterceptor, settledValue)
+            );
+          }
 
+          // in addition call the settled handler regardless if it was provided
           if (lifecycle[Symbols.SETTLED]) {
             next(
               formPayload(
@@ -136,6 +141,10 @@ const requestMiddleware = (store: Store) => (next: Dispatch) => (
                 settledValue
               )
             );
+          } else if (!lifecycleInterceptor) {
+            // else no handler was provided for the success and/or error scenario
+            // and no settled handler so simply resolve or reject with the response
+            !err ? resolve(response) : reject(err);
           }
         } else {
           next(

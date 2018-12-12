@@ -40,7 +40,7 @@ async function delay(amount: number): Promise<any> {
  */
 async function* fetch(
   endpoint: Request,
-  yieldUntilCondition: YieldUntil
+  yieldUntilCondition: YieldUntil,
 ): AsyncIterableIterator<{ done: boolean; value: any }> {
   while (true) {
     // call the intended api
@@ -77,7 +77,7 @@ async function poll(
     pollUntil: YieldUntil;
     pollInterval?: number;
     timeout?: number;
-  }
+  },
 ) {
   let gen: AsyncIterableIterator<any> = fetch(endpoint, pollUntil);
   let timesUp: boolean = false;

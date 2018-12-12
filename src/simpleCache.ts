@@ -30,7 +30,7 @@ class SimpleCache {
   public cacheRequest(
     { namespace, concurrent }: RequestCacheOptions,
     cancel: () => any
-  ): string {
+  ): RequestCacheStatus {
     const uid: string = uuid();
     const requestType = this.getNamespace(namespace, uid) || SimpleCache.generic;
     // the requestType is used as a top level mechanism to define which api endpoint is being hit
@@ -77,7 +77,7 @@ class SimpleCache {
       existingCache.set(uid, requestStatus);
     }
 
-    return uid;
+    return requestStatus;
   }
 
   /**
@@ -100,6 +100,18 @@ class SimpleCache {
         this._cache.delete(requestType);
       }
     }
+  }
+
+  public cancelAllRequests(): void {
+    this._cache.forEach((value, key) => {
+      value.forEach((v, k) => {
+        if (v.cancel) {
+          v.cancel("request made against same namespace, cancelling previous request");
+        }
+      });
+    });
+
+    this.cleanCache();
   }
 
   /**

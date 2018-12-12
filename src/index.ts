@@ -67,10 +67,12 @@ const requestMiddleware = (store: Store) => (next: Dispatch) => (
     }
 
     // cache the current request
-    const uid: string = requestCache.cacheRequest(
+    const r = requestCache.cacheRequest(
       action.payload,
       source && source.cancel
     );
+
+    const uid: string = r.uid;
 
     // if pending lifecycle is configured then create a request id that is used to cache this specific request
     if (lifecycle[Symbols.PENDING]) {
@@ -167,6 +169,8 @@ const requestMiddleware = (store: Store) => (next: Dispatch) => (
       // clear the cache for the response
       requestCache.clearRequest(action.payload, uid);
     });
+  } else if (action.type === Symbols.ABORT) {
+    requestCache.cancelAllRequests();
   } else {
     return next(action);
   }

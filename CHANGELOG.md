@@ -1,5 +1,12 @@
 # Changelog
 
+### 0.8.3 (Dec 11, 2018)
+
+New Functionality:
+
+- Add support for cancellation of all pending requests that have not been resolved at the time of cancellation. *NOTE* this only works for calls made with Axios which is used internally.
+
+
 ### 0.8.2 (Dec 5, 2018)
 
 Fixes:
